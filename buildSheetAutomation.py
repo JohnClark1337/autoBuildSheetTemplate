@@ -184,7 +184,7 @@ def getPorts():
     for i in p:
             if '-' not in i:
                 portList.append(i)
-            
+            #test if port id starts in 'e'
             elif i[0] == 'e' or i[1] == 'e':
                 beginningList = list()
                 endList = list()
@@ -218,8 +218,9 @@ def getPorts():
                         endList.sort()
                         for e in endList:
                             portList.append(beginningList[0] + e)
+            #test if port id ends in digit
             elif i[-1] in string.digits:
-                x = re.search(r"[a-zA-Z][ ]*[0-9]+", i)
+                x = re.search(r"[a-zA-Z]*[ ]*[0-9]+", i)
                 if x != None:
                     letterList = list()
                     endpoints = list()
@@ -248,16 +249,21 @@ def getPorts():
                                     end = endpoints[0]
                             counter = end - beginning
                     #adds the first entry to the list [letter][number]
-                    if counter == 0 and (letterList is not None or endpoints is not None):
+                    if counter == 0 and (letterList is not None and endpoints is not None):
                             portList.append(letterList[0] + endpoints[0])
+                    elif counter == 0 and letterList is None and endpoints is not None:
+                        portList.append(endpoints[0])
                     #cycles through to add the rest of the entries
                     elif counter > 0:
                             for x in range(beginning, end + 1):
                                 y = re.search(r"[a-zA-Z][ ][0-9]+", i)
-                                if y != None:
-                                    portList.append(letterList[0] + " {}".format(x))
+                                if letterList is not None:
+                                    if y != None:
+                                        portList.append(letterList[0] + " {}".format(x))
+                                    else:
+                                        portList.append(letterList[0] + "{}".format(x))
                                 else:
-                                    portList.append(letterList[0] + "{}".format(x))
+                                    portList.append(x)
 
 
 
@@ -295,7 +301,7 @@ while l == True:
     else:
         getPorts()
     if d == False:
-        loc = input("Device rack location: ")
+        loc = input("Device rack location: ").upper()
         cloop = True
         while cloop == True:
             col = input("Choose color for device? ")
@@ -308,7 +314,7 @@ while l == True:
     newLocation += (len(portList) + 1)
     loop = True
     while loop == True:
-        begin = input("Add a device? ")
+        begin = input("Add another device?(Y/N/Copy) ")
         if begin.upper() in noList:
             l = False
             loop = False
@@ -321,7 +327,7 @@ while l == True:
             runtimes += 1
             loop = False
         else:
-            print("Incorrect response(Y/N/Dup needed)\n")
+            print("Incorrect response(Y/N/Copy needed)\n")
 
 
 
