@@ -14,6 +14,7 @@ doc = home + '/Documents/testBuildSheet.xlsx'
 wb = Workbook()
 sheet = wb.active
 
+#cell formatting
 lsideBorders = Border(left=Side(style='thick'))
 rsideBorders = Border(right=Side(style='thick'))
 bBorders = Border(bottom=Side(style='thick'))
@@ -35,6 +36,8 @@ headings = ['System', 'Type', 'Name', 'Interface', 'IP', 'User ID', 'PWD', 'Cons
 yesList = ['YES', 'Y']
 noList = ['NO', 'N']
 dupList = ['DUP', 'DUPLICATE', 'COPY', 'SAME']
+fixList = ['FIX', 'CHANGE']
+mainList = list()
 portList = list()
 newLocation = 5
 name = ''
@@ -140,7 +143,7 @@ def makeHeader(r, cs=2, cend=12):
         sheet.cell(row=r, column=y).font = titleFont
 
 """
-chooseColo()
+chooseColor()
 Arguments: none
 Description:
     Uses tkinter color selection form to allow user to select color they want the device information
@@ -159,8 +162,9 @@ def chooseColor():
     color = askcolor((243,205,121), root)[1]
     if color != '' and color != None:
         color = color[1:]
-        global backgroundColor
-        backgroundColor = PatternFill(start_color=color, end_color=color, fill_type='solid')
+        setBackgroundColor(color)
+        # global backgroundColor
+        # backgroundColor = PatternFill(start_color=color, end_color=color, fill_type='solid')
     root.destroy()
     root.mainloop()
 
@@ -182,93 +186,237 @@ def getPorts():
         p = {ports}
 
     for i in p:
-            if '-' not in i:
-                portList.append(i)
-            #test if port id starts in 'e'
-            elif i[0] == 'e' or i[1] == 'e':
-                beginningList = list()
-                endList = list()
-                b=0
-                e=0
-                x = re.search(r"[e][0-9][a-z][-][e][0-9][a-z]", i)
-                if x != None:
-                    entry = x.string.split('-')
-                    beginningList.append(entry[0][-3] + entry[0][-2])
-                    beginningList.append(entry[1][-3] + entry[1][-2])
-                    endList.append(entry[0][-1])
-                    endList.append(entry[1][-1])
-                    if beginningList[0] == beginningList[1]:
-                        start = 0
-                        stop = 0
-                        for l in string.ascii_lowercase:
-                            if l == endList[0]:
-                                start = string.ascii_lowercase.index(l)
-                            elif l == endList[1]:
-                                stop = string.ascii_lowercase.index(l)
-                        if start == stop:
-                            portList.append(beginningList[0] + endList[0])
-                        elif start > stop:
-                            e = start
-                            b = stop
-                        elif start < stop:
-                            b = start
-                            e = stop
-                        for x in range(b+1, e):
-                            endList.append(string.ascii_lowercase[x])
-                        endList.sort()
-                        for e in endList:
-                            portList.append(beginningList[0] + e)
-            #test if port id ends in digit
-            elif i[-1] in string.digits:
-                x = re.search(r"[a-zA-Z]*[ ]*[0-9]+", i)
-                if x != None:
-                    letterList = list()
-                    endpoints = list()
-                    counter = 0
-                    beginning = 0
-                    end = 0
-                    findRange = x.string.split('-')
-                    #gets first letter from both sides of '-'
-                    for r in findRange:
-                            letterList.append(str(''.join(list(filter(str.isalpha, r)))))
-                    #checks if there is a letter to the right of '-', and if not simply takes the number
-                    if letterList[1] is not None and letterList[1] != "":
-                            if letterList[0].upper() == letterList[1].upper():
-                                    for r in findRange:
-                                            endpoints.append(int(''.join(list(filter(str.isdigit, r)))))
-                    elif letterList[1] is None or letterList[1] == "":
-                            for r in findRange:
-                                    endpoints.append(int(''.join(list(filter(str.isdigit, r)))))
-                    #compares the 2 numbers so that they can be traversed even if in the wrong order
-                    if endpoints != None:
-                            if endpoints[1] > endpoints[0]:
-                                    end = endpoints[1]
-                                    beginning = endpoints[0]
-                            elif endpoints[0] > endpoints[1]:
-                                    beginning = endpoints[1]
-                                    end = endpoints[0]
-                            counter = end - beginning
-                    #adds the first entry to the list [letter][number]
-                    if counter == 0 and (letterList is not None and endpoints is not None):
-                            portList.append(letterList[0] + endpoints[0])
-                    elif counter == 0 and letterList is None and endpoints is not None:
-                        portList.append(endpoints[0])
-                    #cycles through to add the rest of the entries
-                    elif counter > 0:
-                            for x in range(beginning, end + 1):
-                                y = re.search(r"[a-zA-Z][ ][0-9]+", i)
-                                if letterList is not None:
-                                    if y != None:
-                                        portList.append(letterList[0] + " {}".format(x))
-                                    else:
-                                        portList.append(letterList[0] + "{}".format(x))
+        x = re.search(r"[e][0-9][a-z][-][e][0-9][a-z]", i)
+        if '-' not in i:
+            portList.append(i)
+        #test if port id starts in 'e'
+        #elif i[0] == 'e'  or i[1] == 'e':
+        elif x != None:
+            beginningList = list()
+            endList = list()
+            b=0
+            e=0
+            x = re.search(r"[e][0-9][a-z][-][e][0-9][a-z]", i)
+            #if x != None:
+            entry = x.string.split('-')
+            beginningList.append(entry[0][-3] + entry[0][-2])
+            beginningList.append(entry[1][-3] + entry[1][-2])
+            endList.append(entry[0][-1])
+            endList.append(entry[1][-1])
+            if beginningList[0] == beginningList[1]:
+                start = 0
+                stop = 0
+                for l in string.ascii_lowercase:
+                    if l == endList[0]:
+                        start = string.ascii_lowercase.index(l)
+                    elif l == endList[1]:
+                        stop = string.ascii_lowercase.index(l)
+                if start == stop:
+                    portList.append(beginningList[0] + endList[0])
+                elif start > stop:
+                    e = start
+                    b = stop
+                elif start < stop:
+                    b = start
+                    e = stop
+                for x in range(b+1, e):
+                    endList.append(string.ascii_lowercase[x])
+                endList.sort()
+                for e in endList:
+                    portList.append(beginningList[0] + e)
+        #test if port id ends in digit
+        elif i[-1] in string.digits:
+            letterList = list()
+            endpoints = list()
+            counter = 0
+            beginning = 0
+            end = 0
+                
+            x = re.search(r"[0-9]+[a-zA-Z]*[ ]*[a-zA-Z]*[ ]+[0-9]+", i)
+            if x != None:
+                findRange = x.string.split('-')
+                newRange = findRange[0].split(' ')
+                secondRange = findRange[1].split(' ')
+                if newRange[0] != '':
+                    if str.isalpha(newRange[1]):
+                        letterList.append(newRange[0] + newRange[1])
+                        endpoints.append(int(newRange[2]))
+                    else:
+                        letterList.append(newRange[0])
+                        endpoints.append(int(newRange[1]))
+                else: 
+                    if str.isalpha(newRange[2]):
+                        letterList.append(newRange[1] + " " + newRange[2])
+                        endpoints.append(int(newRange[3]))
+                    else:
+                        letterList.append(newRange[1])
+                        endpoints.append(int(newRange[2]))
+                if len(secondRange) > 1:
+                    if str.isalpha(secondRange[1]):
+                        letterList.append(secondRange[0] + " " + secondRange[1])
+                        endpoints.append(int(secondRange[2]))
+                    else:
+                        letterList.append(secondRange[0])
+                        endpoints.append(int(secondRange[1]))
+                else:
+                    letterList.append(newRange[0])
+                    endpoints.append(int(secondRange[0]))
+            # if endpoints != None:
+            #     if endpoints[1] > endpoints[0]:
+            #             end = endpoints[1]
+            #             beginning = endpoints[0]
+            #     elif endpoints[0] > endpoints[1]:
+            #             beginning = endpoints[1]
+            #             end = endpoints[0]
+            #     counter = end - beginning
+            # #adds the first entry to the list [letter][number]
+            # if counter == 0 and (letterList is not None and endpoints is not None):
+            #     portList.append(letterList[0] + endpoints[0])
+            # elif counter == 0 and letterList is None and endpoints is not None:
+            #     portList.append(endpoints[0])
+            # #cycles through to add the rest of the entries
+            # elif counter > 0:
+            #     for x in range(beginning, end + 1):
+            #         portList.append(letterList[0] + " {}".format(x))
+        
+
+
+
+            x = re.search(r"[a-zA-Z]*[ ]*[0-9]+", i)
+            if x != None:
+                findRange = x.string.split('-')
+                #gets first letter from both sides of '-'
+                for r in findRange:
+                        letterList.append(str(''.join(list(filter(str.isalpha, r)))))
+                #checks if there is a letter to the right of '-', and if not simply takes the number
+                if letterList[1] is not None and letterList[1] != "":
+                        if letterList[0].upper() == letterList[1].upper():
+                                for r in findRange:
+                                        endpoints.append(int(''.join(list(filter(str.isdigit, r)))))
+                elif letterList[1] is None or letterList[1] == "":
+                        for r in findRange:
+                                endpoints.append(int(''.join(list(filter(str.isdigit, r)))))
+                #compares the 2 numbers so that they can be traversed even if in the wrong order
+                if endpoints != None:
+                        if endpoints[1] > endpoints[0]:
+                                end = endpoints[1]
+                                beginning = endpoints[0]
+                        elif endpoints[0] > endpoints[1]:
+                                beginning = endpoints[1]
+                                end = endpoints[0]
+                        counter = end - beginning
+                #adds the first entry to the list [letter][number]
+                if counter == 0 and (letterList is not None and endpoints is not None):
+                        portList.append(letterList[0] + endpoints[0])
+                elif counter == 0 and letterList is None and endpoints is not None:
+                    portList.append(endpoints[0])
+                #cycles through to add the rest of the entries
+                elif counter > 0:
+                        for x in range(beginning, end + 1):
+                            y = re.search(r"[a-zA-Z][ ][0-9]+", i)
+                            if letterList is not None:
+                                if y != None:
+                                    portList.append(letterList[0] + " {}".format(x))
                                 else:
-                                    portList.append(x)
+                                    portList.append(letterList[0] + "{}".format(x))
+                            else:
+                                portList.append(x)
+
+def clearScreen():
+    if os.name == 'nt':
+        _ = os.system('cls')
+    else:
+        _ = os.system('clear')
+
+def printDevices():
+    #clearScreen()
+    print("These entries will be written:\n")
+    x = 1
+    for item in mainList:
+        print("{0}.Name: {1}\nLocation: {2}\nPortList: {3}\n".format(x, item[0], item[1], str(item[5])))
+        x += 1
+
+def writingSpreadsheet():
+    printDevices()
+    t = False
+    while t == False:
+        cont = input("\nDoes this look correct?(Y/N) ").upper()
+        if cont in noList:
+            return False
+        elif cont in yesList:
+            t = True
+        else:
+            print("Please type Y or N")
+    global name
+    global loc
+    global backgroundColor
+    global portList
+    for item in mainList:
+        name = item[0]
+        loc = item[1]
+        backgroundColor = item[4]
+        portList = item[5]
+        addDeviceLayout(item[2], item[3])
+    return True
 
 
 
-fname = input("What would you like the filename to be? ")
-doc= home + '/Documents/{}.xlsx'.format(fname)
+def fixEntry():
+    z = False
+    while z == False:
+        printDevices()
+        listText = "1"
+        if len(mainList) > 1:
+            listText = "1-{}".format(len(mainList))
+        try:
+            try:
+                f = int(input("Which device entry would you like to fix?\nSelect Number ({}), 0 to quit): ".format(listText)))
+            except ValueError:
+                print("Please the device number, or 0 to quit.")
+                break
+            if f > len(mainList) or f < 0:
+                print("Device Number not available. Please select from list. ({}), 0 to quit".format(listText))
+            elif f == 0:
+                z = True
+            elif f < len(mainList) and f > 0:
+                currentDevice = mainList[f-1]
+                cl = False
+                while cl == False:
+                    print("1. Name ({0})\n2. Location ({1})\n3. Color\n4. Ports ({2})\n".format(currentDevice[0], currentDevice[1], currentDevice[5]))
+                    comp = input("Select component to change(q to quit): ").upper()
+                    if comp == 'Q':
+                        cl = True
+
+        except:
+            print("Please enter the number of the device. ({}), 0 to quit".format(listText))
+
+
+
+r = True
+while r == True:
+    fname = input("What would you like the filename to be? ")
+    if fname != "":
+        doc= home + '/Documents/{}.xlsx'.format(fname)
+        if os.path.isfile(doc):
+            l = True
+            while l == True:
+                a = input("File exists. Overwrite?(Y/N): ").upper()
+                if a in yesList:
+                    try:
+                        os.remove(doc)
+                        l = False
+                        r = False
+                    except Exception as e:
+                        print("Unable to replace file\n{}".format(str(e)))
+                        l = False
+                elif a in noList:
+                    l = False
+                else:
+                    print("Incorrect input (Y/N)\n\n")
+        else:
+            r = False
+    else:
+        print("Name cannot be blank\n\n")
 
 
 for c, s in cwidths.items():
@@ -280,18 +428,22 @@ d = False
 l = True
 runtimes = 0
 while l == True:
+    #create list containing device information
+    #[name, loc, startr, endr, color, ports]
+    #[name, loc, newlocation, newlocation(edited), backgroundcolor, portlist]
+    thisDevice = list()
     if d == False:
         name = input("Type of device: ").upper()
     if runtimes > 0:
         r = True
         if d == False:
             while r == True:
-                keepPorts = input("Same ports as last time? ")
-                if keepPorts.upper() in noList:
+                keepPorts = input("Same ports as last time? ").upper()
+                if keepPorts in noList:
                     portList.clear()
                     getPorts()
                     r = False
-                elif keepPorts.upper() in yesList:
+                elif keepPorts in yesList:
                     print("Keeping same ports: " + str(portList))
                     r = False
                 else:
@@ -304,33 +456,49 @@ while l == True:
         loc = input("Device rack location: ").upper()
         cloop = True
         while cloop == True:
-            col = input("Choose color for device? ")
-            if col.upper() in yesList:
+            col = input("Choose color for device? ").upper()
+            if col in yesList:
                 chooseColor()
                 cloop = False
-            if col.upper() in noList:
+            if col in noList:
                 cloop = False
-    addDeviceLayout(newLocation, len(portList) + newLocation)
-    newLocation += (len(portList) + 1)
+    #addDeviceLayout(newLocation, len(portList) + newLocation)
+    thisDevice.append(name)
+    thisDevice.append(loc)
+    thisDevice.append(newLocation)
+    newLocation += len(portList)
+    thisDevice.append(newLocation)
+    thisDevice.append(backgroundColor)
+    thisDevice.append(portList[:])
+    mainList.append(thisDevice)
+    newLocation += 1
     loop = True
     while loop == True:
-        begin = input("Add another device?(Y/N/Copy) ")
-        if begin.upper() in noList:
-            l = False
-            loop = False
-        elif begin.upper() in yesList:
+        begin = input("Add another device?(Y/N/Copy/Fix) ").upper()
+        if begin in noList:
+            if writingSpreadsheet() == False:
+                print("Something isn't right")
+            else:
+                l = False
+                loop = False
+        elif begin in yesList:
             d = False
             runtimes += 1
             loop = False
-        elif begin.upper() in dupList:
+        elif begin in dupList:
             d = True
             runtimes += 1
             loop = False
+        elif begin in fixList:
+            fixEntry()
         else:
             print("Incorrect response(Y/N/Copy needed)\n")
 
 
 
 
-wb.save(doc)
+try:
+    wb.save(doc)
+except Exception as e:
+    print("Unable to save Document\n{}".format(str(e)))
 check_output(doc, shell=True)
